@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Note App</title>
+    <link rel="stylesheet" href="./css/style.css">
+	
+	<!-- include libraries(jQuery, bootstrap) -->
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+
+
+<!-- include summernote css/js-->
+<link rel="stylesheet" href="./summernote/summernote-lite.css" />
+<script src="./summernote/summernote-lite.js"></script>
+</head>
+
+<body>
+<nav>
+  <button class="openbtn" onclick="openNav()">☰ </button> 
+Note App
+<a href="index.html">Home</a>
+ <a class="active" href="tag.html">Tags</a>
+</nav>
+<div class="container">
+  <div class="sidebar" id="mySidebar">
+  <a href="javascript:void(0)" class="closebtn1" onclick="closeNav()">×</a>
+   
+  <div id="index" class="index">
+  <div class="wrap-table">
+ <table id="content">
+ <thead>
+ <tr><th style="min-width:100%;">.....................................</th></tr></thead>
+ <tbody id="data"></tbody>
+ </table>
+        </div></div>
+</div>
+  <div class="main" id="main">
+  <div class="title">
+  <input type="text" id="title-input" class="title-input" />
+  <input type="text" id="heading-input" class="small-inputs" />
+  </div>
+<div id="summernote"></div>
+    </div>     </div> 
+
+  
+
+     
+
+        
+
+      
+
+    <!-- SCRIPTS -->
+
+
+</body>
+<script>
+var htmlRegexG = /(?<=<pre.*?class="".*?>)(.*?)(?=<\/pre>)/g;;
+function openNav() {
+  document.getElementById("mySidebar").style.width = "250px";
+  document.getElementById("main").style.marginLeft = "250px";
+}
+
+function closeNav() {
+  document.getElementById("mySidebar").style.width = "0";
+  document.getElementById("main").style.marginLeft= "0";
+}
+//////////////////Display Records
+//$('#surahBtn').on('click',function(){
+ //       $('#surahModal').modal({show:true});
+//});
+
+function sav(val) {
+$.ajax({
+			url: "https://script.google.com/macros/s/AKfycbxBXF81TjE7l3JuLN-wIslfUq9HoYdix9GjzfQH_htIRZrh-Jnkt-rPobRJLI89pDXQ/exec",
+			type: "GET",
+			cache: false,
+			data:{
+				id: val,
+				title: $('#title-input').val(),
+				heading: $('#heading-input').val(),
+				content: $('#summernote').summernote('code'),
+			},
+			success: function(dataResult){
+				var dataResult = JSON.parse(dataResult);
+				if(dataResult.statusCode==200){
+					alert('Data updated successfully !');
+					 window.location.href = "#";
+					location.reload();					
+				}
+			}
+		});
+};
+
+function del(val) {
+$.ajax({
+			url: "https://script.google.com/macros/s/AKfycbwoCbFDbUH5LwSgUlis8amRubYPLnuX82MG4_xFxqLb52OB9DNmlgyxRTjQt8frQdeX/exec",
+			type: "GET",
+			cache: false,
+			data:{
+				id: val,
+			},
+			success: function(dataResult){
+				var dataResult = JSON.parse(dataResult);
+				if(dataResult.statusCode==200){
+					alert('Note deleted successfully !');
+					//location.reload();					
+				}
+			}
+		});
+};
+
+function rtl() {
+if ($(".note-editing-area").css('direction') == 'rtl') {
+$(".note-editing-area").css("direction", "ltr");
+} 
+else {
+$(".note-editing-area").css("direction", "rtl");
+}
+}
+const fetchPromise = fetch("https://script.google.com/macros/s/AKfycbxm3V6azwI_6Fdj2Nx54LpYEjhjTjcryMuZDTH2MAucT9XdPeH95-ztNAVIK0Fn5srZ-w/exec");
+fetchPromise.then(response => {
+  return response.json();
+}).then(items => {
+  const data = items.map(items => '<tr><td><button class="s1"><a href="#'+items.heading+'">'+items.tag+'<br /><span class="cat" id="test">'+items.heading+'</a></button></td></tr>').join("\n");
+  var text = items.map(items => items.note);
+  var name = items.map(items => items.name);
+  var heading = items.map(items => items.heading);
+  document.getElementById("data").innerHTML = data;
+ $('#content').DataTable({
+        paging: false,
+        ordering: false,
+        info: false,
+    });
+ load();
+window.addEventListener('hashchange',() =>{
+    
+	load();
+},3);
+
+  function load() {
+  var note = window.location.hash.substring(1).split(':')[0];
+
+             // If length greater than 4
+ let cid = heading.indexOf(note);
+$("#heading-input").val(heading[cid]);
+$("#title-input").val(name[cid]);
+
+ 
+  let contentid;
+if (cid !== -1) {
+contentid = cid;
+
+}
+else if (cid === -1) {
+if(note.length > 1)           // If length greater than 4
+ {
+  
+ window.open('index.html#'+note, '_blank');
+  }
+  }
+
+	
+$("#summernote").summernote("code",text[contentid]);
+
+
+setTimeout(function() {
+$("#savebtn").val(contentid+2);
+$("#deletebtn").val(contentid+2);
+
+}, 10);
+}
+var $input = $('<button class="note-btn" onclick="sav(this.value);" id="savebtn" type="button">🖫</button><button class="note-btn" onclick="del(this.value);" id="deletebtn" type="button">🗑</button><button class="note-btn" onclick="rtl();" id="rtlbtn" type="button">☷</button>');
+    $input.prependTo($(".note-btn-group").eq(0));
+
+});
+
+//search
+var next_index = 0;
+var indexes;
+var prev_index = 0;
+
+$("#find").on('click', function() {
+    prev_index = 0;
+    next_index = 0;
+    var span = $(".search").find('span');
+    if($(span).length) {
+    	$(span).contents().unwrap();
+    }
+    var find = $("#find_me").val();
+    console.log(find);
+	 var text = $(".search").text();
+	 console.log(text);
+    var rg = new RegExp(find, 'g');
+    indexes = text.match(rg);
+     $(".search").html(function(_, html){
+        return html.replace(rg, '<span class="red">'+find+'</span>');   
+     });
+});
+$("#next").on('click', function() {
+    $("body").find('span.red').eq(prev_index).removeClass('selected'); 
+    if(prev_index > 0) {
+      next_index = prev_index + 1;
+      prev_index = -1;
+    } else if (next_index > indexes.length - 1) {
+        next_index = 0;
+    }
+    console.log(next_index);
+$("body").find('span.red').eq(next_index-1).removeClass('selected');         $("body").find('span.red').eq(next_index).addClass('selected');
+	next_index++;
+});
+
+$("#prev").on('click', function() {
+    $("body").find('span.red').eq(next_index).removeClass('selected'); 
+     if(next_index > 0) {
+      prev_index = next_index - 1;
+      next_index = -1;
+    } else if (prev_index < 0) {
+        prev_index = indexes.length - 1;
+    }
+    console.log(prev_index);
+
+	prev_index--;
+
+    $("body").find('span.red').eq(prev_index+1).removeClass('selected');         $("body").find('span.red').eq(prev_index).addClass('selected');
+    
+ });
+
+
+
+</script>
+</html>
